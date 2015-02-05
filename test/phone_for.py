@@ -19,7 +19,7 @@ counttemp=0
 # and the image you would like to classify.
 MODEL_FILE = caffe_root+'examples/mnist/lenet.prototxt'
 PRETRAINED = '/home/songqing/dl/caffe/examples/mnist/zsq1_lenet_iter_1000.caffemodel'
-def classifynum():
+def classifynum(iternum):
 	global piccount
 	counttemp=piccount
 	piccount=piccount+1
@@ -51,6 +51,16 @@ def classifynum():
 	print 'predicted class:', prediction[0][nummax]
 	print 'predicted class:', prediction[0]
 	outfile.write(str(nummax)+' '+str(prediction[0][nummax])+'\n')
+	if(prediction[0][nummax]<0.999):
+		prediction[0][nummax]=0
+	elif((len(finallist)==0)):
+		finallist.append(nummax)
+		ratelist.append(prediction[0][nummax])
+		poslist.append(iternum)
+	elif((iternum-poslist[-1])>6 and len(finallist) < 11):
+		finallist.append(nummax)
+		ratelist.append(prediction[0][nummax])
+		poslist.append(iternum)
 
 #%timeit net.predict([input_image])
 
@@ -67,7 +77,14 @@ def classifynum():
 #%timeit net.forward(data=caffe_input)
 if __name__ == '__main__':
 	piccount=0
+	finallist=[]
+	poslist=[]
+	ratelist=[]
 	outfile=open('smallpic.txt','w')
 	for i in range(1,118):
-		classifynum()
+		classifynum(i)
 	outfile.close()
+	print finallist
+	print ratelist
+	print poslist
+
