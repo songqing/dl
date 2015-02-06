@@ -1,4 +1,5 @@
 #%matplotlib inline
+import os
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,12 +14,12 @@ sys.path.append('/usr/lib/python2.7/dist-packages')
 import caffe
 
 filename='0'
-piccount=2
+piccount=0
 counttemp=0
 # Set the right path to your model definition file, pretrained model weights,
 # and the image you would like to classify.
 MODEL_FILE = caffe_root+'examples/mnist/lenet.prototxt'
-PRETRAINED = '/home/songqing/dl/caffe/examples/mnist/zsq4_lenet_iter_10000.caffemodel'
+PRETRAINED = '/home/songqing/dl/caffe/examples/mnist/zsqequal_lenet_iter_10000.caffemodel'
 def classifynum(iternum):
 	global piccount
 	counttemp=piccount
@@ -32,6 +33,8 @@ def classifynum(iternum):
 		filename=filename+str(counttemp)
 
 	IMAGE_FILE = '/home/songqing/dl/dl/phone/phonenum_recognition/BMP7/testpic/pic'+filename+'.bmp'
+	if(os.path.isfile(IMAGE_FILE) == False):
+		return
 #IMAGE_FILE = '/home/songqing/dl/dl/task/task1/imdata/3_0005.bmp'
 
 	caffe.set_phase_test()
@@ -56,11 +59,11 @@ def classifynum(iternum):
 		finallist.append(nummax)
 		ratelist.append(prediction[0][nummax])
 		poslist.append(iternum)
-	elif(iternum - poslist[-1]<=4 and prediction[0][nummax] > ratelist[-1]):
+	elif(iternum - poslist[-1]<=5 and prediction[0][nummax] > ratelist[-1]):
 		if(len(finallist)>1):
 			if(iternum-poslist[-2] < 14):
 				if(nummax==1):
-					if(prediction[0][nummax] > 0.995):
+					if(prediction[0][nummax] > 0.999):
 						finallist[-1]=nummax
 						ratelist[-1]=prediction[0][nummax]
 						poslist[-1]=iternum
@@ -72,10 +75,16 @@ def classifynum(iternum):
 			finallist[-1]=nummax
 			ratelist[-1]=prediction[0][nummax]
 			poslist[-1]=iternum
-	elif((iternum-poslist[-1])>6 and len(finallist) < 11):
-		finallist.append(nummax)
-		ratelist.append(prediction[0][nummax])
-		poslist.append(iternum)
+	elif((iternum-poslist[-1])>4 and len(finallist) < 11):
+		if(nummax==1):
+			if(prediction[0][nummax] > 0.999):
+				finallist.append(nummax)
+				ratelist.append(prediction[0][nummax])
+				poslist.append(iternum)
+		else:
+			finallist.append(nummax)
+			ratelist.append(prediction[0][nummax])
+			poslist.append(iternum)
 	outfile.write(str(nummax)+' '+str(prediction[0][nummax])+'\n')
 
 #%timeit net.predict([input_image])
@@ -86,18 +95,13 @@ def classifynum(iternum):
 	caffe_input = np.asarray([net.preprocess('data', in_) for in_ in input_oversampled])
 # forward() takes keyword args for the input blobs with preprocessed input arrays.
 #%timeit net.forward(data=caffe_input)
-# Full pipeline timing.
-#%timeit net.predict([input_image])
-
-# Forward pass timing.
-#%timeit net.forward(data=caffe_input)
 if __name__ == '__main__':
-	piccount=2
+	piccount=0
 	finallist=[]
 	poslist=[]
 	ratelist=[]
 	outfile=open('smallpic.txt','w')
-	for i in range(1,120):
+	for i in range(1,130):
 		classifynum(i)
 	outfile.close()
 	print finallist
