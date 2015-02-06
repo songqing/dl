@@ -55,7 +55,7 @@ def classifynum(iternum):
 	#print 'predicted class:', prediction[0]
 
 # if rate is small, put 0 to it's value
-	if(prediction[0][nummax]<0.97 and nummax!=1):
+	if(prediction[0][nummax]<0.98 and nummax!=1):
 		if(nummax==9):
 			if(prediction[0][nummax]<0.9):
 				prediction[0][nummax]=0
@@ -71,33 +71,113 @@ def classifynum(iternum):
 		finallist.append(nummax)
 		ratelist.append(prediction[0][nummax])
 		poslist.append(iternum)
-	elif(iternum - poslist[-1]<=5 and prediction[0][nummax] > ratelist[-1]):
-		if(len(finallist)>1):
-			if(iternum-poslist[-2] < 14):
-				if(nummax==1):
-					if(prediction[0][nummax] > 0.999):
+	elif(iternum - poslist[-1]<=2):
+		if(prediction[0][nummax] > ratelist[-1]):
+			if(len(finallist)>1):
+				if(iternum-poslist[-2] < 14):
+					if(nummax==1):
+						if(prediction[0][nummax] > 0.999):
+							finallist[-1]=nummax
+							ratelist[-1]=prediction[0][nummax]
+							poslist[-1]=iternum
+					else:
 						finallist[-1]=nummax
 						ratelist[-1]=prediction[0][nummax]
 						poslist[-1]=iternum
-				else:
-					finallist[-1]=nummax
-					ratelist[-1]=prediction[0][nummax]
-					poslist[-1]=iternum
-		else:
-			finallist[-1]=nummax
-			ratelist[-1]=prediction[0][nummax]
-			poslist[-1]=iternum
-#put a new value into the num list
-	elif((iternum-poslist[-1])>5 and len(finallist) < 11):
-		if(nummax==1):
-			if(prediction[0][nummax] > 0.999):
+			else:
+				finallist[-1]=nummax
+				ratelist[-1]=prediction[0][nummax]
+				poslist[-1]=iternum
+#put into the list OR update, limit operation
+	elif(iternum - poslist[-1] <=5 and iternum-poslist[-1] >=4):
+		if(len(finallist)==1):#add not update
+			if(nummax==1):
+				if(prediction[0][nummax] > 0.999):
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+			elif(prediction[0][nummax] > 0.99):
 				finallist.append(nummax)
 				ratelist.append(prediction[0][nummax])
 				poslist.append(iternum)
 		else:
-			finallist.append(nummax)
-			ratelist.append(prediction[0][nummax])
-			poslist.append(iternum)
+			if(ratelist[-1]> 0.999):# last rate is too high, add
+				if(nummax==finallist[-1] and finallist[-1]== finallist[-2]):
+					if(iternum-poslist[-2] > 14):
+						finallist.append(nummax)
+						ratelist.append(prediction[0][nummax])
+						poslist.append(iternum)
+				elif(nummax==1):
+					if(finallist[-1]!=0):
+						if(prediction[0][nummax] > 0.9999 and iternum- poslist[-2] > 14):
+							finallist.append(nummax)
+							ratelist.append(prediction[0][nummax])
+							poslist.append(iternum)
+				elif(prediction[0][nummax] > 0.99):
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+			elif(ratelist[-1]>0.98 and nummax==9):# 9 rate is lower, add
+				if(nummax==finallist[-1] and finallist[-1]== finallist[-2]):
+					if(iternum-poslist[-2] > 14):
+						finallist.append(nummax)
+						ratelist.append(prediction[0][nummax])
+						poslist.append(iternum)
+				elif(nummax==1 and iternum - poslist[-2] > 14):
+					if(prediction[0][nummax] > 0.9999):
+						finallist.append(nummax)
+						ratelist.append(prediction[0][nummax])
+						poslist.append(iternum)
+				elif(prediction[0][nummax] > 0.99):
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+			elif(prediction[0][nummax] > ratelist[-1]):#update
+				if(iternum-poslist[-2] < 14):
+					if(nummax==1):
+						if(finallist[-1]==0):
+							if(prediction[0][nummax] > 0.9999):
+								finallist[-1]=nummax
+								ratelist[-1]=prediction[0][nummax]
+								poslist[-1]=iternum
+						elif(prediction[0][nummax] > 0.999):
+							finallist[-1]=nummax
+							ratelist[-1]=prediction[0][nummax]
+							poslist[-1]=iternum
+					else:
+						finallist[-1]=nummax
+						ratelist[-1]=prediction[0][nummax]
+						poslist[-1]=iternum
+
+#direct put into the list
+	elif((iternum-poslist[-1])>5 and len(finallist) < 11):
+		if(len(finallist) <= 2):
+			if(nummax==1):
+				if(prediction[0][nummax] > 0.993):
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+			else:
+				finallist.append(nummax)
+				ratelist.append(prediction[0][nummax])
+				poslist.append(iternum)
+		else:# 2 same num might detect as 3 nums
+			if(nummax==finallist[-1] and finallist[-1]== finallist[-2]):
+				if(iternum-poslist[-2] > 14):
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+			else:
+				if(nummax==1):
+					if(prediction[0][nummax] > 0.993):
+						finallist.append(nummax)
+						ratelist.append(prediction[0][nummax])
+						poslist.append(iternum)
+				else:
+					finallist.append(nummax)
+					ratelist.append(prediction[0][nummax])
+					poslist.append(iternum)
+
 	outfile.write(str(nummax)+' '+str(prediction[0][nummax])+'\n')
 
 #%timeit net.predict([input_image])
